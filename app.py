@@ -1,8 +1,8 @@
 """ User application """
 
 from flask import Flask, redirect, render_template, flash, url_for, request, session
-from forms import AddUser, LogInForm
-from models import db, connect_db, User
+from forms import AddUser, LogInForm, AddFeedback
+from models import db, connect_db, User, Feedback
 
 
 app = Flask(__name__)
@@ -49,7 +49,7 @@ def add_user_registration_form():
 
         session["user_id"] = new_user.username
 
-        return redirect("/secret")
+        return redirect(f"/users/{new_user.username}")
     else:
         return redirect("/register")
 
@@ -88,6 +88,7 @@ def validate_login():
 def show_the_secrets(username):
     """ Authenticate the user and see if they can see the secrets """
 
+
     if "user_id" not in session:
         flash("You must be logged in to view!")
         return redirect("/")
@@ -95,7 +96,27 @@ def show_the_secrets(username):
     else:
         user = User.query.filter_by(username=username).first()
         # import pdb; pdb.set_trace()
-        return render_template("secret.html", user=user)
+        feedback = user.feedbacks
+        return render_template("secret.html", user=user, feedback=feedback)
+
+
+@app.route("/users/<username>/delete")
+def delete_a_user(username):
+    """ Delete a user from the database """
+    comprablename = session["user_id"]
+
+    if username == comprablename:
+        deleteing_user = User.query.filter_by(username=username).first()
+        db.session.delete(deleteing_user)
+        db.session.commit()
+        session.pop("user_id")
+
+        return redirect("/")
+
+    else:
+        flash(f"You must be the {username} to delete")
+        return redirect(f"/users/{username}")
+
 
 
 @app.route("/logout")
@@ -105,3 +126,44 @@ def logout():
     session.pop("user_id")
 
     return redirect("/")
+
+
+@app.route("/users/<username>/feedback/add")
+def show_feedback(username):
+    """ Authenticate the user and show form """
+
+    form = AddFeedback()
+
+    if "user_id" not in session:
+        flash("You must be logged in to view!")
+        return redirect("/")
+
+    else:
+        user = User.query.filter_by(username=username).first()
+        return render_template("feedback_add.html", user=user, form=form)
+
+
+@app.route("/users/<username>/feedback/add", methods=["POST"])
+def process_feedback(username):
+    """ Authenticate the user and process the feedback_add """
+
+    form = AddFeedback()
+
+    if "user_id" not in session:
+        flash("You must be logged in to view!")
+        return redirect("/")
+
+    else:
+        if form.validate_on_submit():
+            title = form.title.data
+            content = form.content.data
+
+            new_feedback = Feedback(title=title, content=content, username=username)
+
+            db.session.add(new_feedback)
+            db.session.commit()
+
+            return redirect(f"/users/{username}")
+        else:
+            return redirect(f"/users/{username}/feedback/add")
+

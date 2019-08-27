@@ -22,3 +22,11 @@ class LogInForm(FlaskForm):
     username = StringField("Username")
 
     password = StringField("Password")
+
+
+class AddFeedback(FlaskForm):
+
+    title = StringField("Feedback title")
+
+    content = StringField("Content body")
+
