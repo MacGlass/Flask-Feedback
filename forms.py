@@ -14,7 +14,7 @@ class AddUser(FlaskForm):
     first_name = StringField("First Name")
 
     last_name = StringField("Last Name")
-    
+
 
 class LogInForm(FlaskForm):
     """ Form to log in. """

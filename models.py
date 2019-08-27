@@ -1,10 +1,10 @@
 
 from flask_sqlalchemy import SQLAlchemy
-import bcrypt
-# from flask_bcrypt import Bcrypt
+# import bcrypt
+from flask_bcrypt import Bcrypt
 
 db = SQLAlchemy()
-# bcrypt = Bcrypt()
+bcrypt = Bcrypt()
 
 
 def connect_db(app):
@@ -14,7 +14,7 @@ def connect_db(app):
 
 
 class User(db.Model):
-    """User Mode"""
+    """User Model"""
     __tablename__ = 'users'
 
     username = db.Column(db.String(20), primary_key=True)
@@ -28,14 +28,14 @@ class User(db.Model):
     last_name = db.Column(db.String(30), nullable=False)
 
     @classmethod
-    def register(cls, username, password):
+    def register(cls, username, password, email, first_name, last_name):
         """ Register user w/ hashed password and return user. """
         # hashes as password
         hashed = bcrypt.generate_password_hash(password)
         # turning the password from bit interperlation into utf8
         hased_utf8 = hashed.decode("utf8")
         # creates a instance of the user
-        return cls(username=username, password=hased_utf8)
+        return cls(username=username, password=hased_utf8, email=email, first_name=first_name, last_name=last_name)
 
     @classmethod
     def authenticate(cls, username, password):
@@ -48,3 +48,17 @@ class User(db.Model):
             return user
         else:
             return False
+
+
+class Feedback(db.Model):
+    """Feedback Model"""
+
+    __tablename__ = 'feedbacks'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    title = db.Column(db.String(100), nullable=False)
+
+    content = db.Column(db.Text, nullable=False)
+
+    username = db.Column(db.String(20), db.ForeignKey("users.username"))

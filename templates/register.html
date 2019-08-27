@@ -9,6 +9,7 @@
 <p>{{msg}}</p>
 {% endfor %}
 <form action="/register" method="POST">
+    {{form.hidden_tag()}}
     
     {% for field in form 
         if field.widget.input_type != "hidden" %}
@@ -17,7 +18,7 @@
         {{ field }}
         </p>
     {% endfor %}
-    <button form="submit" class="btn btn-primary">Submit</button>
+    <button class="btn btn-primary">Submit</button>
     </form>
 
 {% endblock %}
