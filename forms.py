@@ -30,3 +30,9 @@ class AddFeedback(FlaskForm):
 
     content = StringField("Content body")
 
+
+class EditFeedback(FlaskForm):
+
+    title = StringField("Edit title")
+
+    content = StringField("Edit body")

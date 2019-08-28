@@ -1,7 +1,7 @@
 """ User application """
 
 from flask import Flask, redirect, render_template, flash, url_for, request, session
-from forms import AddUser, LogInForm, AddFeedback
+from forms import AddUser, LogInForm, AddFeedback, EditFeedback
 from models import db, connect_db, User, Feedback
 
 
@@ -88,7 +88,6 @@ def validate_login():
 def show_the_secrets(username):
     """ Authenticate the user and see if they can see the secrets """
 
-
     if "user_id" not in session:
         flash("You must be logged in to view!")
         return redirect("/")
@@ -103,6 +102,7 @@ def show_the_secrets(username):
 @app.route("/users/<username>/delete")
 def delete_a_user(username):
     """ Delete a user from the database """
+
     comprablename = session["user_id"]
 
     if username == comprablename:
@@ -116,7 +116,6 @@ def delete_a_user(username):
     else:
         flash(f"You must be the {username} to delete")
         return redirect(f"/users/{username}")
-
 
 
 @app.route("/logout")
@@ -158,7 +157,8 @@ def process_feedback(username):
             title = form.title.data
             content = form.content.data
 
-            new_feedback = Feedback(title=title, content=content, username=username)
+            new_feedback = Feedback(
+                title=title, content=content, username=username)
 
             db.session.add(new_feedback)
             db.session.commit()
@@ -167,3 +167,56 @@ def process_feedback(username):
         else:
             return redirect(f"/users/{username}/feedback/add")
 
+
+@app.route("/feedback/<int:id>/update")
+def get_edit_feedback_form(id):
+
+    comprablename = session["user_id"]
+    feedback = Feedback.query.get_or_404(id)
+    form = EditFeedback()
+
+    if feedback.username == comprablename:
+        return render_template("feedback_edit.html", form=form, feedback=feedback)
+
+    else:
+        return redirect("/")
+
+
+@app.route("/feedback/<int:id>/update", methods=["POST"])
+def update_feedback(id):
+
+    comprablename = session["user_id"]
+    feedback = Feedback.query.get_or_404(id)
+    form = EditFeedback()
+
+    if feedback.username == comprablename:
+        if form.validate_on_submit():
+            feedback.title = form.title.data
+            feedback.content = form.content.data
+
+            db.session.add(feedback)
+            db.session.commit()
+
+            return redirect(f"/users/{feedback.username}")
+
+    else:
+
+        return redirect(f"/feedback/{feedback.id}/update")
+
+
+@app.route("/feedback/<int:id>/delete", methods=["POST"])
+def delete_feedback(id):
+
+    comprablename = session["user_id"]
+    feedback = Feedback.query.get_or_404(id)
+    username = feedback.username
+
+    if feedback.username == comprablename:
+        db.session.delete(feedback)
+        db.session.commit()
+
+        return redirect(f"/users/{username}")
+
+    else:
+        flash(f"You must be the {username} to delete")
+        return redirect(f"/users/{username}")
